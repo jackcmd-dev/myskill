@@ -1,0 +1,4 @@
+interface:
+  display_name: "PyTorch 2.13 NPU 环境准备"
+  short_description: "创建独立容器，从最新主干自动构建 torch_npu 并验证 NPU 图编译"
+  default_prompt: "使用 $pytorch213-npu-environment 准备独立 PyTorch 2.13 NPU 容器，从官方最新主干构建 torch_npu，只完成环境验证，暂不运行 benchmark。"

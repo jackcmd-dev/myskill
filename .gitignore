@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.env
+connection.json
+connections.json
+credentials*
+artifacts/
+*.log

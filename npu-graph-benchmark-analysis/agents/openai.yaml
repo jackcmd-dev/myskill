@@ -1,0 +1,4 @@
+interface:
+  display_name: "NPU 图模式 benchmark 分析"
+  short_description: "按 README 收集融合范围、融合效果及性能基线，支持跨模型和版本对比"
+  default_prompt: "使用 $npu-graph-benchmark-analysis 按项目 README 准备并收集 NPU eager/图模式对比数据，先确认版本、配置和审核范围。"
