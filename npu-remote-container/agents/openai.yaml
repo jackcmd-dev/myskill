@@ -1,0 +1,4 @@
+interface:
+  display_name: "NPU 远程连接与容器管理"
+  short_description: "通过三字段配置连接主机，管理独立容器、运行时选卡和多主机回退"
+  default_prompt: "使用 $npu-remote-container 连接我提供的主机，找到或创建本任务容器，检查空闲卡，暂不安装环境或运行模型。"

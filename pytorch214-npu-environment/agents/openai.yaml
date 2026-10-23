@@ -1,0 +1,4 @@
+interface:
+  display_name: "PyTorch 2.14 + TorchNPU + CANN 9.2.0"
+  short_description: "准备并验证三组件匹配的NPU执行环境，包含设备、图编译与采样检查"
+  default_prompt: "使用 $pytorch214-npu-environment 准备 PyTorch 2.14 + torch_npu + CANN 9.2.0 正式版环境，只完成安装和小型验证，不启动benchmark。"

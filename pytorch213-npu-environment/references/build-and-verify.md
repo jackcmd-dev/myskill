@@ -4,7 +4,9 @@
 
 ## 基础容器与隔离环境
 
-本项目从带CANN、编译器和Python3.12的已有开发镜像创建独立容器，新目录挂到用户指定的容器工作目录。提供候选 `/dev/davinci*` 及管理设备、驱动/dcmi/install-info只读挂载，根据当前授权选择容器权限和网络，不预设ASCEND_RT_VISIBLE_DEVICES或NPU_ASSIGNED_DEVICES。创建本身不分配正在使用的NPU，也不需要先抢占一张卡。
+本技能目标为 **CANN 9.2.0**。选择或准备含该版本的独立环境，按官方要求核对硬件/驱动及当前 torch_npu 源码兼容性；记录实际版本元数据、安装/激活路径和包来源。不能把历史基础镜像中的9.1.0直接视为满足条件，不能通过改目录名或版本文件代替安装。此文后续命令仍是历史流程模板，使用9.2.0后必须重新通过依赖、小型NPU计算及编译前后向验证；不得擅自改宿主机驱动或覆盖旧结果环境。
+
+将明确的目标镜像、工作目录和只读驱动挂载要求交给npu-remote-container创建本任务容器；本技能只负责容器内软件准备，不直接管理Docker或主机连接。不要在创建时绑定某张正在使用的NPU。
 
 基础镜像可以含2.14，但目标2.13必须位于不继承系统site-packages的venv：
 
@@ -78,17 +80,18 @@ Docker容器环境变量不会因修改.bashrc自动更新；`docker exec ... py
 
 ## 运行时选卡与验证
 
-宿主机根据npu-smi查询候选卡，要求健康正常、无运行进程、计算利用率0、显存满足验证需求；实例使用至少16 GiB，可按模型/验证需求调整。取得协作锁后复查，在任务的docker exec上设置ASCEND_RT_VISIBLE_DEVICES和必要的NPU_ASSIGNED_DEVICES。设置之后才启动Python导入NPU；不要在无卡选择的常驻Python进程里初始化全部卡再尝试切换。
+由npu-remote-container在宿主机根据npu-smi查询候选卡，要求健康正常、无运行进程、计算利用率0、显存满足验证需求；实例使用至少16 GiB，可按模型/验证需求调整。取得协作锁后复查，在任务的docker exec上设置ASCEND_RT_VISIBLE_DEVICES和必要的NPU_ASSIGNED_DEVICES。设置之后才启动Python导入NPU；不要在无卡选择的常驻Python进程里初始化全部卡再尝试切换。
 
 保存选卡快照、物理/逻辑映射；无空闲卡则退出或按用户要求等待。锁只约束遵守该协议的任务。容器提供候选卡访问不代表这些卡全部被任务占用。
 
 验证清单：
 
 1. PyTorch2.13与源码构建torch_npu2.13的实际版本、commit、导入路径都正确，来自隔离venv。
-2. pip check通过；实际import Triton与发行包版本分别记录。
+2. 记录pip check真实状态；模型/后端核心依赖必须满足，未使用辅助工具的缺口单独列明，不能说成全量依赖通过。实际import Triton与发行包版本分别记录。
 3. 任务内只见1张卡，记录型号。
 4. NPU加法结果正确；小型eager计算的反向结果正确。
 5. 显式DVM后端，使用 `torch.compile(..., backend='inductor', mode='reduce-overhead')` 对小型算子序列前向和反向，核对eager输出与梯度并同步。不是跑benchmark，也不输出性能加速比。
+6. 编译完成后独立对小型算子验证profiler采集和解析，检查有效步、非空kernel/task、时间线及可读数据库。不能用历史9.1.0结果替代2.13 + CANN9.2.0验证，也不运行完整模型。
 
 本次最初出现TritonMissing，补装同2.14来源的triton-ascend3.6.0+git0cfb1708及其依赖后通过；不要泛化为所有2.13都必须使用此版本。包的Requires-Dist含triton==3.6.0，禁止忽略它仅靠改版本号或复制旧site-packages解决。记录import3.5.0与distribution3.6.0的真实差异，保留失败报告及最终报告。
 
