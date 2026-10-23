@@ -20,4 +20,4 @@ description: 自动连接用户提供的NPU宿主机，创建或连接本任务�
 
 上下文记录schema_version、执行方式、主机/容器ID、镜像ID、owner/task、宿主机/容器工作目录、已授权设备范围；实际选卡后追加物理/逻辑映射及锁范围。具体软件版本、Python/CANN激活路径由环境报告补充，不把密码或认证原文写入上下文。
 
-本技能可以单独用于“连接容器”“新建我的验证容器”“检查空闲卡”。环境安装使用 `pytorch214-npu-environment`，模型采集使用 `npu-graph-benchmark-analysis`；当前请求没有包含的下一步不自动执行。
+本技能可以单独用于“连接容器”“新建我的验证容器”“检查空闲卡”。环境安装使用 `pytorch214-npu-environment`，模型采集使用 `npu-graph-benchmark-collect`；当前请求没有包含的下一步不自动执行。

@@ -1,11 +1,11 @@
 ---
-name: npu-graph-benchmark-analysis
-description: 在已准备好的NPU环境按Ascend TorchBench README收集融合范围、debug加profiler融合效果和无调试性能基线，汇总加速比、报告及最小复现；不安装环境或管理容器，支持离线日志分析。
+name: npu-graph-benchmark-collect
+description: 在已准备好的NPU环境按Ascend TorchBench README收集融合范围、debug加profiler融合效果和无调试性能基线，只负责产物核验、采集记录及NPU耗时/加速比汇总；不做GPU对比、性能原因分析或最小复现，不安装环境或管理容器。
 ---
 
-# NPU 融合数据收集与分析
+# NPU 图模式 benchmark 数据收集
 
-本技能只处理benchmark源码、审核后的运行、产物回收核验与分析。远程连接/创建容器用npu-remote-container；PyTorch2.14 + torch_npu + CANN9.2.0安装验证用pytorch214-npu-environment。已有可用会话或环境报告则直接复用，不重复要求安装其他技能。离线分析只需要日志。
+本技能只处理benchmark源码、审核后的运行、产物回收核验与耗时汇总。远程连接/创建容器用npu-remote-container；PyTorch2.14 + torch_npu + CANN9.2.0安装验证用pytorch214-npu-environment。已有可用会话或环境报告则直接复用，不重复要求安装其他技能。离线耗时汇总只需要日志。
 
 ## 输入与执行边界
 
@@ -17,7 +17,7 @@ benchmark前提交实际方案、完整命令、配置、统计口径和预期�
 
 ## 采集流程
 
-1. 每个新模型/版本读取实际README和runner，核实参数、模型入口、前后向/优化器范围、dtype/batch、后端和计时语义。细则见 [采集与分析](references/workflow.md)。
+1. 每个新模型/版本读取实际README和runner，核实参数、模型入口、前后向/优化器范围、dtype/batch、后端和计时语义。细则见 [采集与核验](references/workflow.md)。
 2. 请求远程技能按任务需求选空闲卡并持锁，初始化NPU前设置可见设备；同轮eager/compile固定同主机同卡。不共享忙卡、不终止其他任务，不在不同主机拼接一轮数据。
 3. 按下表运行用户批准的阶段，使用版本/模型/阶段/时间隔离的目录和编译缓存：
 
@@ -28,7 +28,7 @@ benchmark前提交实际方案、完整命令、配置、统计口径和预期�
    | 性能基线 | 关 | 关 | eager/compile逐步E2E耗时与正式加速比 |
 
 4. 完整回收debug目录（存在时）、profile目录（存在时）、日志、精度、命令、真实环境和设备记录，生成SHA256清单；编译缓存默认留远端。额外提取并索引fx_graph_readable.py、output_code.py、ir_pre_fusion.txt、ir_post_fusion.txt。不能只收提取副本丢掉原始目录；某后端未生成目标文件时报告缺口，不伪造或拿其他轮产物补齐。
-5. 核验退出码、实际迭代、精度、dump非空及前向/反向、profiler有效步/CSV/数据库，下载后核对SHA256。交付产物路径和按请求生成的表格、融合映射、原因报告/最小复现。技术案例见 [历史结果](references/project-history.md)，不要求原案例资产存在。
+5. 核验退出码、实际迭代、精度、dump非空及前向/反向、profiler有效步/CSV/数据库，下载后核对SHA256。交付产物路径、文件索引、采集记录和按请求生成的NPU耗时/加速比表格。技术案例见 [历史结果](references/project-history.md)，不要求原案例资产存在。
 
 ## 计时与脚本
 
@@ -42,4 +42,4 @@ python "$SKILL_DIR/scripts/summarize_timings.py" \
   --run "baseline=$BASELINE_LOG" --output-dir "$REPORT_DIR"
 ```
 
-GPU数据到齐后先核对工作负载和计时口径，再比较设备内部加速比。数据收集不自动包含GPU运行或阶段2优化实施。
+本技能到数据收集与核验为止。后续取得GPU数据后，再单独定义并执行跨设备对比、融合映射、性能差距原因分析与最小复现；这些不属于当前技能能力，也不自动实施优化。

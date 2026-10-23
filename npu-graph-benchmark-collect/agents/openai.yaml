@@ -1,0 +1,4 @@
+interface:
+  display_name: "NPU 图模式 benchmark 数据收集"
+  short_description: "只收集融合范围、同轮debug与profiler及无调试基线，核验产物并汇总加速比"
+  default_prompt: "使用 $npu-graph-benchmark-collect 在已有执行环境收集融合范围、融合效果和无调试基线，先提交方案与完整命令审核。"

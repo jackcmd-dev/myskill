@@ -6,4 +6,4 @@
 
 检查与安装在目标容器内进行；已有正式2.13 wheel可按实际Python/架构核实来源及SHA，其他2.13开发构建须记录完整版本/commit。源码torch_npu默认固定官方当前主干HEAD，实际根据已安装PyTorch版本构建。历史构建机制变化时按当前源码处理。
 
-交付environment_report.json，记录实际解释器/激活入口、组件版本/路径/来源、设备/编译/profiler小型验证、依赖缺口及核心路径是否就绪。环境技能不跑模型benchmark；模型数据交给npu-graph-benchmark-analysis在用户批准后收集。
+交付environment_report.json，记录实际解释器/激活入口、组件版本/路径/来源、设备/编译/profiler小型验证、依赖缺口及核心路径是否就绪。环境技能不跑模型benchmark；模型数据交给npu-graph-benchmark-collect在用户批准后收集。
