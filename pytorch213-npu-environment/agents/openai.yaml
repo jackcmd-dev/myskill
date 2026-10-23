@@ -1,4 +1,4 @@
 interface:
   display_name: "PyTorch 2.13 + TorchNPU + CANN 9.2.0"
-  short_description: "独立维护2.13的软件安装与小型验证，远程容器操作交给专用技能"
+  short_description: "负责2.13环境创建和准备，已经过设备、图模式、profiler和试恢复验证"
   default_prompt: "使用 $pytorch213-npu-environment 准备 PyTorch 2.13 + torch_npu + CANN 9.2.0 正式版，只做环境准备和验证，不启动模型benchmark。"

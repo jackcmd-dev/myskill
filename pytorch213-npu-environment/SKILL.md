@@ -1,11 +1,13 @@
 ---
 name: pytorch213-npu-environment
-description: 单独准备和验证PyTorch 2.13、torch_npu与CANN 9.2.0正式版执行环境，处理版本匹配、安装/构建、激活及小型设备/编译/profiler验证；不运行模型benchmark，远程连接与容器管理交给npu-remote-container。
+description: 负责PyTorch 2.13 + torch_npu + CANN 9.2.0正式版环境的创建和准备；该组合已经过NPU运算、图模式前后向、profiler及备份试恢复验证，适用于准备或核查2.13执行环境。
 ---
 
 # PyTorch 2.13 + torch_npu + CANN 9.2.0 环境准备
 
 本技能只准备软件环境，交付环境报告。不得把PyTorch 2.13省略torch_npu、误装2.4/2.14，或把9.2.0-beta当成9.2.0正式版。仅安装成功、import成功或镜像标签匹配不足以判定环境就绪。
+
+2026-10-23已完成2.13 + CANN9.2.0正式版的核心验证、DCGAN三类采集和备份试恢复验证，实际版本及结果见[已验证实例](references/verified-instance.md)。此记录不替代对新使用者环境的实测。容器创建由本技能确定镜像与软件需求，交给npu-remote-container执行；宿主机需预先具备NPU驱动和Docker。
 
 ## 输入与边界
 
@@ -26,4 +28,4 @@ description: 单独准备和验证PyTorch 2.13、torch_npu与CANN 9.2.0正式版
 
 采集技能使用环境报告做只读复核，不依赖个人PC路径。参考 [已验证2.13实例](references/verified-instance.md) 理解实测路线；实例不提供默认主机、容器、个人镜像或已授权权限。
 
-本技能独立维护2.13的安装与验证步骤，不转换为通用版本选择器。2.13 + CANN9.1.0的历史成功不能证明2.13 + CANN9.2.0已通过，必须重新验证。
+本技能独立维护2.13的安装与验证步骤，不转换为通用版本选择器。2.13 + CANN9.2.0已有独立实测证据；历史9.1.0记录保留真实版本，重新创建的环境仍须通过本技能的实际验证。

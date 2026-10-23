@@ -1,11 +1,13 @@
 ---
 name: pytorch214-npu-environment
-description: 单独准备和验证PyTorch 2.14、torch_npu与CANN 9.2.0正式版执行环境，处理版本匹配、安装/构建、激活及小型设备/编译/profiler验证；不运行模型benchmark，远程连接与容器管理交给npu-remote-container。
+description: 负责PyTorch 2.14 + torch_npu + CANN 9.2.0正式版环境的创建和准备；该组合已经过NPU运算、图模式前后向、profiler及备份试恢复验证，适用于准备或核查2.14执行环境。
 ---
 
 # PyTorch 2.14 + torch_npu + CANN 9.2.0 环境准备
 
 本技能只准备软件环境，交付环境报告。不得把PyTorch 2.14省略torch_npu、误装2.4/2.13，或把9.2.0-beta当成9.2.0正式版。仅安装成功、import成功或镜像标签匹配不足以判定环境就绪。
+
+2026-10-23已完成本组合的核心验证、DCGAN三类采集及备份试恢复，见[已验证实例](references/verified-instance.md)。环境创建由本技能确定镜像与软件需求，SSH和Docker操作交给npu-remote-container；宿主机需预先具备兼容NPU驱动和Docker，新使用者环境仍须实测。
 
 ## 输入与边界
 
