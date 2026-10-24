@@ -1,11 +1,13 @@
 ---
 name: npu-remote-container
-description: 自动连接用户提供的NPU宿主机，创建或连接本任务独立容器，运行时选空闲卡并按名单回退主机；只处理SSH、Docker、设备与文件传输，不安装PyTorch、torch_npu或CANN，不启动benchmark。
+description: 使用SSH密钥自动连接用户提供的NPU宿主机，配置仅需IP和用户名；创建或连接独立任务容器、运行时选空闲卡、多主机回退及文件传输。
 ---
 
 # NPU 远程连接与容器管理
 
-首次使用先告知：复制 `assets/connection.example.json` 到用户私有目录，每台只填 `ip`、`username`、`password`，多台按顺序添加；只提供文件路径，不在聊天发送密码。已有配置直接复用，不增加容器、目录、卡号等必填字段。无固定PC/WSL路径或默认内网主机。
+首次使用先告知：默认SSH公钥认证，复制 `assets/connection.example.json` 到用户私有目录，每台只填 `ip`、`username`，多台按顺序添加。优先使用当前SSH客户端已有的密钥/ssh-agent或SSH配置；自定义密钥才选填`identity_file`，只记录本机路径，不存密钥内容或密码。不增加容器、目录、卡号等必填字段，无固定PC/WSL路径或默认内网主机。
+
+尚未配置公钥时按[连接与首次密钥配置](references/remote-pool.md)处理。仅在用户要求配置免密登录时，创建或复用本机密钥、追加本用户公钥并验证；自动运行不回退明文密码。私钥不进入聊天、仓库、容器、远程服务器或证据包。
 
 按 [连接与容器流程](references/remote-pool.md) 建立当前任务的执行上下文。凭据由控制端正常SSH认证使用，不回显、不传入命令行、不上传容器或证据包。配置不是独立常驻调度器；代理生成并核查当前平台需要的启动器。
 
