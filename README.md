@@ -60,6 +60,8 @@ swr.cn-south-1.myhuaweicloud.com/ascendhub/cann:9.2.0-910b-ubuntu22.04-py3.12-de
 
 ## 三类采集
 
+2026-10-26起，新采集默认组合为`--backend inductor --npu-backend triton_experimental --disable-aclgraph`，不启用`--dynamic-shapes`或`--dynamic-batch-only`，不指定ACLGraph mode；三类采集保持该组合一致，只改变debug/profiler。每次结束必须报告实际完整命令及运行组合。此前DVM+ACLGraph+reduce-overhead数据保留真实历史标签；本次2.14组合已完成DCGAN三类实测，具体版本和兼容性边界见2.14环境技能；其他软件组合仍须独立验证，原DVM验证不能替代triton_experimental验证。采集前仍需按当前README核查支持并审核命令，不静默回退其他后端。
+
 | 阶段 | Debug | Profiler | 回收要求 |
 | --- | --- | --- | --- |
 | 融合范围 | 开 | 关 | 完整debug目录；核验前后向FX、output_code、ir_pre_fusion与ir_post_fusion |

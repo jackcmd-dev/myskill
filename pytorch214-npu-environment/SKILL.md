@@ -22,7 +22,7 @@ description: 负责PyTorch 2.14 + torch_npu + CANN 9.2.0正式版环境的创建
 2. 优先使用当前任务已有且真实满足要求的环境；否则在独立环境安装或构建。CANN优先从官方正式版资源获取，不静默降级为beta或9.1.0。
 3. PyTorch明确选择2.14目标的官方构建/源码产物；正式版、开发版、commit分别记录，不假定某个wheel永久可下载。复现旧结果时保持用户选定commit，不自动升级。
 4. 新安装torch_npu默认使用 `https://gitcode.com/Ascend/pytorch` 当前主干，查询实际远端HEAD并固定commit，按已安装torch实际版本构建；不得改版本字符串伪装匹配。复现已验证栈且用户要求保持版本时可复用原构建，报告其来源与CANN验证结果，不谎称来自最新主干。
-5. 安装必要依赖，保护目标torch/torch_npu版本；对照任务提供的模型/后端依赖清单补齐。记录pip check真实结果，核心路径和未使用的辅助工具缺口分别说明，不把有缺口说成全部通过。
+5. 安装必要依赖，保护目标torch/torch_npu版本；对照任务提供的模型/后端依赖清单补齐。triton_experimental须按实际benchmark README检查triton-ascend。遇到TritonMissing、has_triton为false或launch hook异常，先按[Triton兼容性排查](references/triton-compatibility.md)区分未安装、解释器错用、API不匹配和NPU识别问题，不盲目重复安装。记录pip check真实结果，核心路径和未使用的辅助工具缺口分别说明，不把有缺口说成全部通过。
 6. 激活实际CANN9.2.0和对应Python环境。设备验证通过远程技能取得空闲卡/锁后执行，核查真实加载库未混入旧CANN。小型图模式检查输出及梯度，profiler检查有效步、非空kernel/task及可读数据库。
 7. 输出不含凭据的 `environment_report.json` 和简洁文档：执行上下文、解释器与激活入口、各组件完整版本/commit/路径、来源SHA/镜像ID、验证结果、依赖缺口及是否满足指定核心路径。保留失败尝试；不把小型验证通过当作模型通过。
 

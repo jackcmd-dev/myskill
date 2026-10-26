@@ -24,18 +24,23 @@ README的通用requirements覆盖多种模型；本技能只检查实际模型�
 
 ## README 命令模式
 
-路径与连接先按 [配置文档](configuration.md) 核实。以下为已用于 2.14/2.13 DCGAN 的模板，应用于其他版本前检查 README、`--help` 及源码参数。环境初始化、PYTHONPATH、目录应按实际容器设置。可复用 shell 启动器做日志/选卡，但不要修改测量函数或模型。
+路径与连接先按 [配置文档](configuration.md) 核实。以下按已核查的runner参数组织，是新默认组合的命令模板，不代表已经执行验证；每个目标版本仍需检查README、`--help`及源码参数。环境初始化、PYTHONPATH、目录应按实际容器设置。可复用shell启动器做日志/选卡，但不要修改测量函数或模型。
 
-基础参数：
+2026-10-26起新采集默认使用triton_experimental、关闭ACLGraph、不启用动态shape。先核对当前runner及torch_npu是否支持，不把历史DVM环境验证视为此路线已验证；无法满足时报告缺口，不自动替换后端或开关。此前DVM、ACLGraph开启的命令只作为历史证据保留。
+
+基础参数（DCGAN训练示例，其他模型按审核后的dtype/batch调整）：
 
 ```bash
 python -u torchbench.py --accuracy --cold-start-latency \
-  --training --float32 --backend inductor --npu-backend dvm \
+  --training --float32 --backend inductor \
+  --npu-backend triton_experimental --disable-aclgraph \
   --only dcgan --batch-size 64 --iterations 50 \
   --output "$root/accuracy.csv"
 ```
 
-推理改为 `--inference`。DVM 是本项目 DCGAN 已确认配置，不是所有模型都必须采用的后端。`--backend inductor` 选择编译路径；accuracy 原生流程分别执行 eager/compile 并校验结果。当前 performance 的 `--execution-mode both` 与 accuracy 的编译覆盖范围不完全相同，不能随意混用。
+推理改为`--inference`。不传`--dynamic-shapes`、`--dynamic-batch-only`、`--aclgraph-mode`或`--mfusion`；当前runner的`--disable-aclgraph`会将mode置为None并关闭triton.cudagraphs/cudagraph_trees，要核查实际生效配置。`--backend inductor`选择编译路径；accuracy原生流程分别执行eager/compile并校验结果。当前performance的`--execution-mode both`与accuracy的编译覆盖范围不完全相同，不能随意混用。
+
+预检记录所选后端及实际TORCHINDUCTOR_NPU_BACKEND、compile_kwargs/options、ACLGraph捕获相关配置、是否传入动态shape参数和实际输入尺寸；避免仅记录命令意图就声称所有设置已生效。检查继承环境及既有脚本，只调整本任务中与审核组合冲突的设置，不修改其他任务的全局配置。默认组合的三类采集保持这些项一致，只改变debug/profiler开关。
 
 ### 融合范围
 
@@ -88,5 +93,7 @@ debug=0，删除 `--enable-profiler`（`=0` 表示 Level0 开启，不是关闭�
 按版本/模型/模式/时间隔离目录；至少保存命令、退出码、实际环境、输入配置、log、accuracy、设备选择记录、debug/profiler 状态及产物 manifest。远端保留缓存，本地回收一般排除缓存、凭据及无关文件；下载后校验 SHA256。
 
 三情况对比表列出 debug/profiler 开关、eager/compile E2E 均值、加速比、耗时下降及数据用途，并附原始记录。基线、范围、效果是互补证据，不把 profiler 放大的比值当真实优化收益。
+
+每次运行结束，无论成功或失败，都向用户报告：实际benchmark完整命令及必要环境变量、执行位置与模型/版本、编译后端和NPU路线、ACLGraph开关及mode、动态shape/动态batch参数与实际输入、debug/profiler组合、正确性/退出状态、耗时统计及产物路径。保存command.txt、运行配置JSON和原始日志，并在对话中展示命令及组合表。多轮分别报告，不用一个默认命令代表所有实际执行。无法确认生效项时明确未知，不能只复述请求配置。
 
 GPU对比、融合映射、性能差距原因报告及最小复现属于后续分析阶段，不在本技能中执行；待GPU数据到齐后另行定义流程或技能。

@@ -6,6 +6,23 @@
 
 记录实际解释器与激活路径、源码/runner/README位置、输入shape/dtype/batch、后端、ACLGraph和独立输出目录。路径由运行端发现，执行上下文里区分宿主机和容器目录。报告与回收目录由当前工作区或用户要求确定；可以全程留在远端。
 
+## 默认运行组合
+
+| 项目 | 新采集默认值/命令 |
+| --- | --- |
+| 编译后端 | `--backend inductor` |
+| NPU路线 | `--npu-backend triton_experimental`，口头简称triton-ex |
+| ACLGraph | 关闭：`--disable-aclgraph`；核对runner同时关闭捕获/回放相关设置 |
+| 动态shape | 不启用：不传`--dynamic-shapes`和`--dynamic-batch-only`，保持本轮输入shape固定 |
+| ACLGraph mode | 不指定；当前runner关闭ACLGraph时compile mode为None，不额外传reduce-overhead或max-autotune |
+| MFusion | 不启用，除非用户明确要求 |
+
+以上是生成命令的默认策略，不是新增CLI参数。模型、版本、训练/推理和采集阶段沿用用户请求；dtype/batch按模型和审核方案明确。用户明确覆盖时记录覆盖值，不能让runner自动后端选择或遗留环境变量悄悄改变组合。
+
+“不启用动态shape参数”和“torch.compile(dynamic=False)”不是同一句话：当前runner省略动态参数时可能传dynamic=None。记录实际compile_kwargs及固定输入事实，不编造dynamic=False；若未来要强制该底层选项，先核查实际接口并提交方案，不私改runner。
+
+输出目录/缓存中区分后端、ACLGraph和shape配置，例如`<版本>_<模型>_triton_experimental_aclgraph-off_fixed-shape_<阶段>_<时间>`；新旧采集不可覆盖。已有DVM启动器需要按新组合重新生成并审核，不直接复用其硬编码命令。环境只通过DVM时返回triton_experimental待验证状态，所需小型兼容验证交给对应环境技能，在当前授权范围内执行。
+
 ## benchmark 源码来源开关
 
 | 字段 | 默认 / 说明 |

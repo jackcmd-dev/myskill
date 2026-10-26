@@ -1,4 +1,4 @@
 interface:
   display_name: "NPU 图模式 benchmark 数据收集"
-  short_description: "只收集融合范围、同轮debug与profiler及无调试基线，核验产物并汇总加速比"
-  default_prompt: "使用 $npu-graph-benchmark-collect 在已有执行环境收集融合范围、融合效果和无调试基线，先提交方案与完整命令审核。"
+  short_description: "默认Triton实验后端、关闭图回放与动态shape采集，交付实际命令和组合"
+  default_prompt: "使用 $npu-graph-benchmark-collect 在已有环境按triton_experimental、关闭ACLGraph、不启用动态shape收集融合范围、融合效果和基线；先审核方案及命令，结束后报告实际命令和组合。"
