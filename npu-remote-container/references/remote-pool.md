@@ -41,22 +41,73 @@ ssh -o BatchMode=yes -o ConnectTimeout=10 \
 
 新主机先通过管理员或可信控制台核对SSH主机密钥指纹，再建立known_hosts记录；ssh-keyscan只能取得待核对公钥，不能独立证明身份。重装造成主机密钥变化时先重新核实，不自动删除旧记录或关闭校验。
 
-## 首次配置密钥登录（仅在用户要求时执行）
+## 首次配置免密登录
 
-1. 先用上述公钥方式测试。能登录则直接复用，无需生成新密钥或改服务器。
-2. 不可用时确认实际控制端，复用合适的现有密钥，或选未占用的新文件名创建Ed25519密钥（不覆盖任何密钥）。建议设置私钥口令，通过本机ssh-agent保持后续免输服务器密码；先检查agent是否可用，未启动时按当前系统启动agent服务或终端会话，再执行ssh-add，不把口令保存到文件或参数。
-3. 只把`.pub`公钥安装到目标用户的`~/.ssh/authorized_keys`。Linux/WSL有ssh-copy-id时可用以下模式；首次服务器密码由用户在本机交互终端输入，或由管理员安装公钥，不写入JSON、聊天或脚本。没有交互输入能力时交付公钥及命令，等待用户或管理员完成，不索要明文密码替代。
+用户首次要求建立连接、换服务器或遇到 `Permission denied (publickey,...)` 时，主动引导以下流程。已有公钥登录成功就直接复用。不要把网络不可达、主机身份未核实或主机密钥变化误判为需要重新安装用户公钥。
+
+以下均为通用模板。代理应按当前用户的操作系统、SSH用户和实际路径生成本次可执行命令；真实IP、用户名、公钥、邮箱及个人路径只用于该用户的私有配置和本次操作，不写入skill、示例、共享脚本或发布包。私钥始终留在本机，只读取公钥文件。
+
+### 1. 确认本机密钥
+
+先确认实际运行SSH的是Windows、Linux还是WSL，并检查该控制端的SSH配置、agent和已有公钥；Windows和WSL的密钥、agent及known_hosts不自动共享。优先复用已有密钥，不默认重新生成或覆盖。PowerShell中的默认公钥查看方式：
+
+```powershell
+Get-ChildItem "$env:USERPROFILE\.ssh" -Filter '*.pub'
+Get-Content "$env:USERPROFILE\.ssh\id_ed25519.pub"
+```
+
+Linux/WSL对应使用 `ls ~/.ssh/*.pub` 与 `cat ~/.ssh/id_ed25519.pub`；实际选中了其他密钥时替换文件名。不要读取不带`.pub`的私钥文件内容。
+
+没有合适密钥且用户授权配置免密时，选择未占用的文件名后创建：
+
+```powershell
+# PowerShell；先确认这个文件名尚未使用。
+ssh-keygen -t ed25519 -f "$env:USERPROFILE\.ssh\id_ed25519" -C npu-automation
+```
+
+Linux/WSL使用 `ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -C npu-automation`。建议用户交互设置私钥口令；不要把口令写入参数或配置，也不要求空口令。已有私钥但缺少公钥文件时，由用户在本机用 `ssh-keygen -y -f <私钥路径>` 恢复公钥，不读取私钥正文。
+
+带口令密钥通过实际控制端的ssh-agent解锁：Linux/WSL在需要时执行 `eval "$(ssh-agent -s)"`，再执行 `ssh-add ~/.ssh/id_ed25519`；Windows先检查 `Get-Service ssh-agent`，服务未启动时由用户在管理员PowerShell按需执行 `Set-Service ssh-agent -StartupType Manual` 和 `Start-Service ssh-agent`，然后在本机执行 `ssh-add "$env:USERPROFILE\.ssh\id_ed25519"`。由用户交互输入私钥口令。
+
+### 2. 将公钥添加到服务器
+
+先按上一节核对SSH主机指纹。用户不希望通过SSH密码登录时，直接选择云平台网页终端、物理控制台或管理员渠道安装公钥；公钥不会因本机已经生成而自动出现在新服务器。
+
+让用户在服务器控制台以**目标SSH用户**执行以下Linux命令。将占位符替换为上一步选定公钥的完整单行内容，不使用本skill作者或其他用户的公钥。先验证内容是合法单行公钥，再执行；命令中只放公钥，不放私钥或密码。
 
 ```bash
-# KEY_FILE是已确认未占用的新路径，或当前选定密钥路径。
-# 只在创建新密钥时执行第一句；口令通过交互输入，不放命令参数。
-ssh-keygen -t ed25519 -f "$KEY_FILE" -C npu-automation
-ssh-add "$KEY_FILE"
+# 在服务器端执行；当前用户必须是将要通过SSH登录的用户。
+# 占位符必须先替换为完整的单行公钥。
+key='<PUBLIC_KEY_LINE>'
+install -d -m 700 "$HOME/.ssh"
+touch "$HOME/.ssh/authorized_keys"
+if ! grep -qxF -- "$key" "$HOME/.ssh/authorized_keys"; then
+  printf '\n%s\n' "$key" >> "$HOME/.ssh/authorized_keys"
+fi
+chmod 600 "$HOME/.ssh/authorized_keys"
+```
+
+保留已有authorized_keys；追加前去重，前置换行兼容已有文件末尾无换行的情况。管理员代装时必须定位目标用户的真实home并核对文件属主，不把公钥误装到管理员自己的账户。不要对整个`.ssh`目录递归更改属主。Windows服务器按其OpenSSH配置和ACL选择公钥位置，不套用Linux命令。
+
+用户愿意在本机交互输入一次服务器密码且Linux/WSL具备ssh-copy-id时，可改用：
+
+```bash
 ssh-copy-id -i "$KEY_FILE.pub" -o StrictHostKeyChecking=yes "$SSH_USER@$SSH_HOST"
 ```
 
-4. 不覆盖authorized_keys或其他人的公钥。追加前去重，确保公钥为单行合法密钥；核对目标用户、属主以及.ssh目录700、authorized_keys文件600等权限。Windows服务器路径和ACL按实际OpenSSH配置处理，不盲套Linux命令。
-5. 用BatchMode公钥认证再次运行`true`，成功后再检查Docker。认证失败区分未安装公钥、agent未解锁、权限或服务器不支持公钥认证；停止依赖操作并报告。配置密钥不包含修改共享宿主机sshd_config、禁用所有密码登录或调整root登录策略。
+服务器密码仅由用户在本机SSH认证提示中输入，不索要到聊天，不写入JSON或脚本。代理无法交互时，应交付可执行命令、说明在哪台机器执行并等待完成；不要用明文密码自动化替代。
+
+### 3. 验证与保存连接
+
+用户完成服务器端配置后，代理主动复验。以下PowerShell模板需替换主机、用户名和实际密钥路径；Linux/WSL使用其本机路径及shell语法：
+
+```powershell
+ssh -i "$env:USERPROFILE\.ssh\id_ed25519" -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=10 -o PreferredAuthentications=publickey -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o StrictHostKeyChecking=yes -o ForwardAgent=no <SSH_USER>@<SERVER_IP> "whoami"
+```
+
+只有退出码为0且返回目标用户，才报告免密登录成功，随后检查Docker。失败时区分公钥未装到目标用户、选错本机密钥、agent未解锁、权限或服务器策略，不循环重试、不关闭主机校验，也不修改共享sshd_config、禁用服务器密码登录或调整root登录策略。
+
+成功后将`assets/connection.example.json`保存到用户选择的私有配置目录，写入`ip`、`username`；显式选择密钥时可增加`identity_file`，只存该控制端的私钥路径。保留其他已有主机配置，后续优先复用，不重复要求用户提供密码或重新配置。报告配置位置和验证结果；不要把私有连接配置复制到skill或分享包。
 
 参考：[OpenSSH ssh](https://man.openbsd.org/ssh)、[SSH客户端配置](https://man.openbsd.org/ssh_config)、[ssh-keygen](https://man.openbsd.org/ssh-keygen)。
 
